@@ -39,45 +39,15 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-
-/**
- * An activity that allows a user to publish device information, and receive information about
- * nearby devices.
- * <p/>
- * The UI exposes a button to subscribe to broadcasts from nearby devices, and another button to
- * publish messages that can be read nearby subscribing devices. Both buttons toggle state,
- * allowing the user to cancel a subscription or stop publishing.
- * <p/>
- * This activity demonstrates the use of the
- * {@link Messages#subscribe(GoogleApiClient, MessageListener, SubscribeOptions)},
- * {@link Messages#unsubscribe(GoogleApiClient, MessageListener)},
- * {@link Messages#publish(GoogleApiClient, Message, PublishOptions)}, and
- * {@link Messages#unpublish(GoogleApiClient, Message)} for foreground publication and subscription.
- * <p/>a
- * We check the app's permissions and present an opt-in dialog to the user, who can then grant the
- * required location permission.
- * <p/>
- * Using Nearby for in the foreground is battery intensive, and pub-sub is best done for short
- * durations. In this sample, we set the TTL for publishing and subscribing to three minutes
- * using a {@link Strategy}. When the TTL is reached, a publication or subscription expires.
- */
 public class MainActivity extends AppCompatActivity implements GoogleApiClient.ConnectionCallbacks,
         GoogleApiClient.OnConnectionFailedListener {
 
     private static final String TAG = MainActivity.class.getSimpleName();
-
     private static final int TTL_IN_SECONDS = 3 * 60; // Three minutes.
     private static final String KEY_UUID = "key_uuid";
     private static final Strategy PUB_SUB_STRATEGY = new Strategy.Builder()
             .setTtlSeconds(TTL_IN_SECONDS).build();
 
-    SharedPreferences prefs;
-
-    /**
-     * Creates a UUID and saves it to {@link SharedPreferences}. The UUID is added to the published
-     * message to avoid it being undelivered due to de-duplication. See {@link DeviceMessage} for
-     * details.
-     */
     private static String getUUID(SharedPreferences sharedPreferences) {
         String uuid = sharedPreferences.getString(KEY_UUID, "");
         if (TextUtils.isEmpty(uuid)) {
@@ -87,16 +57,14 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
         return uuid;
     }
 
+    SharedPreferences prefs;
     private GoogleApiClient mGoogleApiClient;
     private SwitchCompat mPublishSwitch;
     private SwitchCompat mSubscribeSwitch;
-
     private Message mPubMessage;
     private MessageListener mMessageListener;
     MyCallReceiver bR = new MyCallReceiver();;
-
     ArrayList<String> phoneNumbers = new ArrayList<String>();
-
     private ArrayAdapter<String> mNearbyDevicesArrayAdapter;
 
     @Override
@@ -106,7 +74,6 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
 
         prefs = this.getSharedPreferences("appdata", Context.MODE_PRIVATE);
 
-
         bR.setMainActivityHandler(this);
         IntentFilter callInterceptorIntentFilter = new IntentFilter("android.intent.action.PHONE_STATE");
         registerReceiver(bR, callInterceptorIntentFilter);
@@ -114,8 +81,7 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
         mSubscribeSwitch = (SwitchCompat) findViewById(R.id.subscribe_switch);
         mPublishSwitch = (SwitchCompat) findViewById(R.id.publish_switch);
         mPublishSwitch.setChecked(true);
-        // Build the message that is going to be published. This contains the device name and a
-        // UUID.
+
         mPubMessage = DeviceMessage.newNearbyMessage(getUUID(getSharedPreferences(
                 getApplicationContext().getPackageName(), Context.MODE_PRIVATE)), prefs.getString ("pnum",null));
 
@@ -126,7 +92,7 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
                 String str = DeviceMessage.fromNearbyMessage(message).getMessageBody();
                 mNearbyDevicesArrayAdapter.add(str);
                         phoneNumbers.add(str);
-                logAndShowSnackbar(phoneNumbers.size()+"Found : "+str);
+                logAndShowSnackbar("Found : "+str);
             }
 
             @Override
@@ -134,16 +100,13 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
                 // Called when a message is no longer detectable nearby.
                 String str = DeviceMessage.fromNearbyMessage(message).getMessageBody();
                 mNearbyDevicesArrayAdapter.remove(str);
-                        //phoneNumbers.remove(str);
+                        phoneNumbers.remove(str);
             }
         };
 
         mSubscribeSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                // If GoogleApiClient is connected, perform sub actions in response to user action.
-                // If it isn't connected, do nothing, and perform sub actions when it connects (see
-                // onConnected()).
                 if (mGoogleApiClient != null && mGoogleApiClient.isConnected()) {
                     if (isChecked) {
                         subscribe();
@@ -158,9 +121,6 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
         mPublishSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                // If GoogleApiClient is connected, perform pub actions in response to user action.
-                // If it isn't connected, do nothing, and perform pub actions when it connects (see
-                // onConnected()).
                 if (mGoogleApiClient != null && mGoogleApiClient.isConnected()) {
                     if (isChecked) {
                         publish();
@@ -173,13 +133,12 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
 
         setArray();
         buildGoogleApiClient();
-
     }
 
 
     public void setArray() {
         final List<String> nearbyDevicesArrayList = new ArrayList<>();
-        System.out.println("\n\n\n\n\n\n\n\\n\n\n\\n///////////////////////////////////!!!!!!!!!!!!!!"+nearbyDevicesArrayList);
+
         mNearbyDevicesArrayAdapter = new ArrayAdapter<>(this,
                 android.R.layout.simple_list_item_1,
                 nearbyDevicesArrayList);
@@ -200,10 +159,7 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
         }
     }
 
-    public void doSubscribe(boolean isChecked) {
-        // If GoogleApiClient is connected, perform sub actions in response to user action.
-        // If it isn't connected, do nothing, and perform sub actions when it connects (see
-        // onConnected()).
+    public void doSubscribe() {
         mSubscribeSwitch.setChecked(true);
 
         final Handler handler = new Handler();
@@ -211,23 +167,19 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
             @Override
             public void run() {
 
-                String txtNum = "|";
+                String txtNum = "";
                 for(int i = 0; i < phoneNumbers.size(); i++) {
-                    txtNum.concat(phoneNumbers.get(i)+"|");
+                    txtNum = txtNum.concat(phoneNumbers.get(i)+"|");
                 }
 
-                logAndShowSnackbar("***********"+txtNum);
+                if(phoneNumbers.size() == 0)
+                    txtNum = "No Device Found";
+
+                logAndShowSnackbar("Nearby List : " + txtNum);
             }
-        }, 4000);
+        }, 6000);
     }
 
-    /**
-     * Builds {@link GoogleApiClient}, enabling automatic lifecycle management using
-     * {@link GoogleApiClient.Builder#enableAutoManage(FragmentActivity,
-     * int, GoogleApiClient.OnConnectionFailedListener)}. I.e., GoogleApiClient connects in
-     * {@link AppCompatActivity#onStart}, or if onStart() has already happened, it connects
-     * immediately, and disconnects automatically in {@link AppCompatActivity#onStop}.
-     */
     private void buildGoogleApiClient() {
         if (mGoogleApiClient != null) {
             return;
@@ -261,11 +213,6 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
     @Override
     public void onConnected(@Nullable Bundle bundle) {
         Log.i(TAG, "GoogleApiClient connected");
-        // We use the Switch buttons in the UI to track whether we were previously doing pub/sub (
-        // switch buttons retain state on orientation change). Since the GoogleApiClient disconnects
-        // when the activity is destroyed, foreground pubs/subs do not survive device rotation. Once
-        // this activity is re-created and GoogleApiClient connects, we check the UI and pub/sub
-        // again if necessary.
         if (mPublishSwitch.isChecked()) {
             publish();
         }
@@ -363,11 +310,6 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
         Nearby.Messages.unpublish(mGoogleApiClient, mPubMessage);
     }
 
-    /**
-     * Logs a message and shows a {@link Snackbar} using {@code text};
-     *
-     * @param text The text used in the Log message and the SnackBar.
-     */
     private void logAndShowSnackbar(final String text) {
         Log.w(TAG, text);
         View container = findViewById(R.id.activity_main_container);

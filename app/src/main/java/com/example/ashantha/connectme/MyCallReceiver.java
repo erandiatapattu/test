@@ -46,7 +46,7 @@ public class MyCallReceiver extends BroadcastReceiver {
             // detect missed call
             if(isRinging==true && isReceived==false){
                 //Toast.makeText(mContext, "Got a missed call from : "+callerPhoneNumber, Toast.LENGTH_LONG).show();
-                mainAc.doSubscribe(true);
+                mainAc.doSubscribe();
             }
         }
     }
