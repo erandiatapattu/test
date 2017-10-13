@@ -21,19 +21,11 @@ public class DeviceMessage {
     private final String mUUID;
     private final String mMessageBody;
 
-
-    /**
-     * Builds a new {@link Message} object using a unique identifier.
-     */
     public static Message newNearbyMessage(String instanceId, String number) {
         DeviceMessage deviceMessage = new DeviceMessage(instanceId, number);
         return new Message(gson.toJson(deviceMessage).getBytes(Charset.forName("UTF-8")));
     }
 
-    /**
-     * Creates a {@code DeviceMessage} object from the string used to construct the payload to a
-     * {@code Nearby} {@code Message}.
-     */
     public static DeviceMessage fromNearbyMessage(Message message) {
         String nearbyMessageString = new String(message.getContent()).trim();
         return gson.fromJson(
@@ -44,7 +36,6 @@ public class DeviceMessage {
     private DeviceMessage(String uuid, String number) {
         mUUID = uuid;
         mMessageBody = number;
-        // TODO(developer): add other fields that must be included in the Nearby Message payload.
     }
 
     protected String getMessageBody() {

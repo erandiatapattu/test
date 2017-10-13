@@ -11,10 +11,9 @@ import android.widget.EditText;
 
 public class Login extends AppCompatActivity {
 
-    EditText pNumber;
-    Button save;
-
-    SharedPreferences prefs;
+    private EditText pNumber;
+    private Button save;
+    private SharedPreferences prefs;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {

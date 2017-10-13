@@ -43,10 +43,20 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
         GoogleApiClient.OnConnectionFailedListener {
 
     private static final String TAG = MainActivity.class.getSimpleName();
-    private static final int TTL_IN_SECONDS = 6 * 60; // Three minutes.
+    private static final int TTL_IN_SECONDS = 10 * 60; // Three minutes.
     private static final String KEY_UUID = "key_uuid";
     private static final Strategy PUB_SUB_STRATEGY = new Strategy.Builder()
             .setTtlSeconds(TTL_IN_SECONDS).build();
+
+    private SharedPreferences prefs;
+    private GoogleApiClient mGoogleApiClient;
+    private SwitchCompat mPublishSwitch;
+    private SwitchCompat mSubscribeSwitch;
+    private Message mPubMessage;
+    private MessageListener mMessageListener;
+    private MyCallReceiver bR = new MyCallReceiver();;
+    private ArrayList<String> phoneNumbers = new ArrayList<String>();
+    private ArrayAdapter<String> mNearbyDevicesArrayAdapter;
 
     private static String getUUID(SharedPreferences sharedPreferences) {
         String uuid = sharedPreferences.getString(KEY_UUID, "");
@@ -56,16 +66,6 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
         }
         return uuid;
     }
-
-    SharedPreferences prefs;
-    private GoogleApiClient mGoogleApiClient;
-    private SwitchCompat mPublishSwitch;
-    private SwitchCompat mSubscribeSwitch;
-    private Message mPubMessage;
-    private MessageListener mMessageListener;
-    MyCallReceiver bR = new MyCallReceiver();;
-    ArrayList<String> phoneNumbers = new ArrayList<String>();
-    private ArrayAdapter<String> mNearbyDevicesArrayAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -160,6 +160,7 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
     }
 
     public void doSubscribe() {
+        mSubscribeSwitch.setChecked(false);
         mSubscribeSwitch.setChecked(true);
 
         final Handler handler = new Handler();
@@ -176,6 +177,8 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
                     txtNum = "No Device Found";
 
                 logAndShowSnackbar("Nearby List : " + txtNum);
+
+
             }
         }, 6000);
     }
@@ -189,12 +192,6 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
                 .addConnectionCallbacks(this)
                 .enableAutoManage(this, this)
                 .build();
-    }
-
-    private String getMyPhoneNO() {
-        TelephonyManager tMgr = (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
-        String mPhoneNumber = tMgr.getLine1Number();
-        return mPhoneNumber;
     }
 
     @Override
@@ -299,6 +296,8 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
      */
     private void unsubscribe() {
         Log.i(TAG, "Unsubscribing.");
+        mNearbyDevicesArrayAdapter.clear();
+        phoneNumbers.clear();
         Nearby.Messages.unsubscribe(mGoogleApiClient, mMessageListener);
     }
 
