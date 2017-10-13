@@ -43,7 +43,7 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
         GoogleApiClient.OnConnectionFailedListener {
 
     private static final String TAG = MainActivity.class.getSimpleName();
-    private static final int TTL_IN_SECONDS = 3 * 60; // Three minutes.
+    private static final int TTL_IN_SECONDS = 6 * 60; // Three minutes.
     private static final String KEY_UUID = "key_uuid";
     private static final Strategy PUB_SUB_STRATEGY = new Strategy.Builder()
             .setTtlSeconds(TTL_IN_SECONDS).build();

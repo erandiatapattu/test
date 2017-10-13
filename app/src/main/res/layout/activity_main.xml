@@ -12,6 +12,12 @@
     android:paddingTop="16dp"
     tools:context="com.example.ashantha.connectme.MainActivity">
 
+    <ImageView
+        android:id="@+id/imageView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:srcCompat="@drawable/logo" />
+
     <android.support.v7.widget.SwitchCompat
         android:id="@+id/subscribe_switch"
         android:layout_width="match_parent"
